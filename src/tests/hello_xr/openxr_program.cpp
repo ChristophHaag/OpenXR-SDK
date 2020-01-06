@@ -411,6 +411,7 @@ struct OpenXrProgram : IOpenXrProgram {
         std::array<XrPath, Side::COUNT> posePath;
         std::array<XrPath, Side::COUNT> hapticPath;
         std::array<XrPath, Side::COUNT> menuClickPath;
+        std::array<XrPath, Side::COUNT> triggerValuePath;
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/left/input/select/click", &selectPath[Side::LEFT]));
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/right/input/select/click", &selectPath[Side::RIGHT]));
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/left/input/squeeze/value", &squeezeValuePath[Side::LEFT]));
@@ -423,6 +424,8 @@ struct OpenXrProgram : IOpenXrProgram {
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/right/output/haptic", &hapticPath[Side::RIGHT]));
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/left/input/menu/click", &menuClickPath[Side::LEFT]));
         CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/right/input/menu/click", &menuClickPath[Side::RIGHT]));
+        CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/left/input/trigger/value", &triggerValuePath[Side::LEFT]));
+        CHECK_XRCMD(xrStringToPath(m_instance, "/user/hand/right/input/trigger/value", &triggerValuePath[Side::RIGHT]));
 
         // Suggest bindings for KHR Simple.
         {
@@ -479,6 +482,26 @@ struct OpenXrProgram : IOpenXrProgram {
                                                             {m_input.vibrateAction, hapticPath[Side::RIGHT]}}};
             XrInteractionProfileSuggestedBinding suggestedBindings{XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
             suggestedBindings.interactionProfile = viveControllerInteractionProfilePath;
+            suggestedBindings.suggestedBindings = bindings.data();
+            suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+            CHECK_XRCMD(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings));
+        }
+
+        // Suggest bindings for the Valve Index Controller.
+        {
+            XrPath indexControllerInteractionProfilePath;
+            CHECK_XRCMD(
+                xrStringToPath(m_instance, "/interaction_profiles/valve/index_controller", &indexControllerInteractionProfilePath));
+            std::vector<XrActionSuggestedBinding> bindings{{{m_input.grabAction, triggerValuePath[Side::LEFT]},
+                                                            {m_input.grabAction, triggerValuePath[Side::RIGHT]},
+                                                            {m_input.poseAction, posePath[Side::LEFT]},
+                                                            {m_input.poseAction, posePath[Side::RIGHT]},
+                                                            {m_input.quitAction, menuClickPath[Side::LEFT]},
+                                                            {m_input.quitAction, menuClickPath[Side::RIGHT]},
+                                                            {m_input.vibrateAction, hapticPath[Side::LEFT]},
+                                                            {m_input.vibrateAction, hapticPath[Side::RIGHT]}}};
+            XrInteractionProfileSuggestedBinding suggestedBindings{XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
+            suggestedBindings.interactionProfile = indexControllerInteractionProfilePath;
             suggestedBindings.suggestedBindings = bindings.data();
             suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
             CHECK_XRCMD(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings));
